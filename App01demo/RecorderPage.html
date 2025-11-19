@@ -2,35 +2,70 @@
 
 {{ block content }}
 
-<p id="status">Aufnahme wird vorbereitet...</p>
+<div style="text-align: center; padding: 20px;">
+    <h2>Aufnahme läuft</h2>
+    <p id="status">🔴 Aufnahme wird vorbereitet...</p>
+    <p id="timer" style="font-size: 24px; font-weight: bold;">10:00</p>
+</div>
 
 <script>
     const status = document.getElementById('status');
+    const timerDisplay = document.getElementById('timer');
     let mediaRecorder = null;
     let chunks = [];
-    let recordedBlob = null;
+    let uploadTriggered = false;
 
-    // Automatisch beim Laden der Seite starten
+    const TOTAL_SECONDS = 30;  // 10 Minuten
+    const UPLOAD_BEFORE_END = 10;  // Upload 5 Sekunden vor Ende
+    let remainingSeconds = TOTAL_SECONDS;
+
+    // Timer-Anzeige aktualisieren
+    function updateTimer() {
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        // Upload 5 Sekunden vor Ende triggern
+        if (remainingSeconds === UPLOAD_BEFORE_END && !uploadTriggered) {
+            uploadTriggered = true;
+            stopAndUpload();
+        }
+
+        if (remainingSeconds > 0) {
+            remainingSeconds--;
+            setTimeout(updateTimer, 1000);
+        }
+    }
+
+    // Aufnahme und Upload
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then((stream) => {
                 mediaRecorder = new MediaRecorder(stream);
 
-                // Automatisch Aufnahme starten
+                // Aufnahme starten
                 mediaRecorder.start();
                 status.textContent = '🔴 Aufnahme läuft...';
-                console.log('Aufnahme automatisch gestartet');
+                console.log('Aufnahme gestartet');
+
+                // Timer starten
+                updateTimer();
 
                 mediaRecorder.ondataavailable = (e) => {
                     chunks.push(e.data);
                 };
 
                 mediaRecorder.onstop = (e) => {
-                    recordedBlob = new Blob(chunks, { type: 'audio/webm' });
-                    console.log('Blob erstellt, Größe:', recordedBlob.size, 'bytes');
+                    const blob = new Blob(chunks, { type: 'audio/webm' });
+                    console.log('Blob erstellt, Größe:', blob.size, 'bytes');
+                    status.textContent = '⏳ Speichere Aufnahme...';
 
-                    // Automatisch hochladen
-                    uploadRecording();
+                    // Upload durchführen
+                    const reader = new FileReader();
+                    reader.onloadend = function() {
+                        liveSend({'audio': reader.result});
+                    };
+                    reader.readAsDataURL(blob);
                 };
             })
             .catch((err) => {
@@ -41,48 +76,21 @@
         status.textContent = 'Fehler: getUserMedia wird nicht unterstützt';
     }
 
-    // Funktion zum Hochladen
-    function uploadRecording() {
-        if (!recordedBlob) {
-            console.error('Kein Blob vorhanden');
-            return;
+    function stopAndUpload() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            console.log('Stoppe Aufnahme für Upload...');
+            mediaRecorder.stop();
         }
-
-        status.textContent = 'Speichere Aufnahme...';
-
-        const reader = new FileReader();
-        reader.onloadend = function() {
-            liveSend({'audio': reader.result});
-        };
-        reader.readAsDataURL(recordedBlob);
     }
 
-    // Empfange Bestätigung vom Server
     function liveRecv(data) {
         if (data.status === 'saved') {
-            status.textContent = '✓ Erfolgreich gespeichert: ' + data.filename;
-            console.log('Upload erfolgreich');
+            status.textContent = '✅ Aufnahme gespeichert!';
+            console.log('Upload erfolgreich:', data.filename);
         }
     }
     window.liveRecv = liveRecv;
-
-    // Beim Verlassen der Seite: Aufnahme stoppen und speichern
-    window.addEventListener('beforeunload', function(e) {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            mediaRecorder.stop();
-            console.log('Aufnahme beim Verlassen gestoppt');
-        }
-    });
-
-    // Alternative für oTree page navigation (falls beforeunload nicht greift)
-    window.addEventListener('pagehide', function(e) {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            mediaRecorder.stop();
-            console.log('Aufnahme beim Seitenwechsel gestoppt');
-        }
-    });
 </script>
 
-{{ next_button }}
-
 {{ endblock }}
+
