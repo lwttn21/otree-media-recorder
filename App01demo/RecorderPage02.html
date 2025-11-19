@@ -1,0 +1,90 @@
+{{ block title }}Aufnahme - Player 2{{ endblock }}
+
+{{ block content }}
+
+<div style="text-align: center; padding: 20px;">
+    <h2>🎤 Player 2 - Aufnahme läuft</h2>
+    <p style="color: #666;">Dies ist die spezifische Seite für Player 2</p>
+    <p id="status">🔴 Aufnahme wird vorbereitet...</p>
+    <p id="timer" style="font-size: 24px; font-weight: bold;">0:30</p>
+</div>
+
+<script>
+    const status = document.getElementById('status');
+    const timerDisplay = document.getElementById('timer');
+    let mediaRecorder = null;
+    let chunks = [];
+    let uploadTriggered = false;
+    
+    const TOTAL_SECONDS = 30;
+    const UPLOAD_BEFORE_END = 5;
+    let remainingSeconds = TOTAL_SECONDS;
+
+    function updateTimer() {
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (remainingSeconds === UPLOAD_BEFORE_END && !uploadTriggered) {
+            uploadTriggered = true;
+            stopAndUpload();
+        }
+        
+        if (remainingSeconds > 0) {
+            remainingSeconds--;
+            setTimeout(updateTimer, 1000);
+        }
+    }
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then((stream) => {
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.start();
+                status.textContent = '🔴 Aufnahme läuft... (Player 2)';
+                console.log('Player 2: Aufnahme gestartet');
+                
+                updateTimer();
+
+                mediaRecorder.ondataavailable = (e) => {
+                    chunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = (e) => {
+                    const blob = new Blob(chunks, { type: 'audio/webm' });
+                    console.log('Player 2: Blob erstellt, Größe:', blob.size, 'bytes');
+                    status.textContent = '⏳ Speichere Aufnahme...';
+                    
+                    const reader = new FileReader();
+                    reader.onloadend = function() {
+                        liveSend({'audio': reader.result});
+                    };
+                    reader.readAsDataURL(blob);
+                };
+            })
+            .catch((err) => {
+                console.error(`getUserMedia error: ${err}`);
+                status.textContent = 'Fehler: Mikrofon-Zugriff verweigert';
+            });
+    } else {
+        status.textContent = 'Fehler: getUserMedia wird nicht unterstützt';
+    }
+
+    function stopAndUpload() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            console.log('Player 2: Stoppe Aufnahme für Upload...');
+            mediaRecorder.stop();
+        }
+    }
+
+    function liveRecv(data) {
+        if (data.status === 'saved') {
+            status.textContent = '✅ Aufnahme gespeichert! (Player 2)';
+            console.log('Player 2: Upload erfolgreich:', data.filename);
+        }
+    }
+    window.liveRecv = liveRecv;
+</script>
+
+{{ endblock }}
