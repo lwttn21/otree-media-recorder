@@ -4,14 +4,14 @@ import os
 from datetime import datetime
 
 doc = """
-Audio Recording Experiment mit 3 Spielern pro Gruppe
+Audio Recording Experiment mit 3 Spielern pro Gruppe und 3 Runden
 """
 
 
 class C(BaseConstants):
     NAME_IN_URL = 'App01demo'
     PLAYERS_PER_GROUP = 3
-    NUM_ROUNDS = 1
+    NUM_ROUNDS = 3  # ← WICHTIG: 3 Runden!
 
     PLAYER1_ROLE = 'Player1'
     PLAYER2_ROLE = 'Player2'
@@ -24,8 +24,8 @@ class Subsession(BaseSubsession):
 
 def creating_session(subsession: Subsession):
     """
-    Wird beim Erstellen der Session ausgeführt.
-    Erstellt automatisch die Ordnerstruktur mit Session-Code (ohne group-Ordner).
+    Wird für JEDE Runde einmal ausgeführt.
+    Erstellt Ordnerstruktur nur in Runde 1.
     """
     if subsession.round_number == 1:
         # Session-Code für eindeutige Identifikation
@@ -51,6 +51,11 @@ def creating_session(subsession: Subsession):
 
                 print(f"✓ Ordner erstellt: {player_dir}")
 
+    # Gruppen-Struktur beibehalten über alle Runden
+    if subsession.round_number > 1:
+        subsession.group_like_round(1)
+
+
 class Group(BaseGroup):
     pass
 
@@ -61,7 +66,9 @@ class Player(BasePlayer):
 
 # PAGES
 class StartPage(Page):
-    pass
+    @staticmethod
+    def is_displayed(player):
+        return player.round_number == 1
 
 
 class WaitForGroup(WaitPage):
@@ -69,6 +76,7 @@ class WaitForGroup(WaitPage):
 
 
 class RecorderPage01(Page):
+    """Aufnahmeseite für Player 1 - in allen 3 Runden"""
     form_model = 'player'
     timeout_seconds = 30
 
@@ -82,22 +90,22 @@ class RecorderPage01(Page):
             audio_base64 = data['audio']
             audio_data = base64.b64decode(audio_base64.split(',')[1])
 
-            # Ohne group-Ordner
             session_code = player.session.code
             participant_code = player.participant.code
             player_id = player.id_in_group
+            round_num = player.round_number  # ← WICHTIG: Runden-Nummer!
 
             recording_dir = os.path.join('recordings', f'session_{session_code}',
                                          f'player_{player_id}_{participant_code}')
 
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"recording_{timestamp}.webm"
+            filename = f"round_{round_num}_recording_{timestamp}.webm"  # ← Mit Runden-Nummer!
             filepath = os.path.join(recording_dir, filename)
 
             with open(filepath, 'wb') as f:
                 f.write(audio_data)
 
-            print(f"✓ Audio gespeichert: {filepath}")
+            print(f"✓ Audio gespeichert: {filepath} (Runde {round_num})")
 
             return {player.id_in_group: {
                 'status': 'saved',
@@ -105,11 +113,13 @@ class RecorderPage01(Page):
                 'participant': participant_code,
                 'session': session_code,
                 'player_id': player_id,
+                'round': round_num,
                 'role': 'Player 1'
             }}
 
 
 class RecorderPage02(Page):
+    """Aufnahmeseite für Player 2 - in allen 3 Runden"""
     form_model = 'player'
     timeout_seconds = 30
 
@@ -126,18 +136,19 @@ class RecorderPage02(Page):
             session_code = player.session.code
             participant_code = player.participant.code
             player_id = player.id_in_group
+            round_num = player.round_number
 
             recording_dir = os.path.join('recordings', f'session_{session_code}',
                                          f'player_{player_id}_{participant_code}')
 
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"recording_{timestamp}.webm"
+            filename = f"round_{round_num}_recording_{timestamp}.webm"
             filepath = os.path.join(recording_dir, filename)
 
             with open(filepath, 'wb') as f:
                 f.write(audio_data)
 
-            print(f"✓ Audio gespeichert: {filepath}")
+            print(f"✓ Audio gespeichert: {filepath} (Runde {round_num})")
 
             return {player.id_in_group: {
                 'status': 'saved',
@@ -145,11 +156,12 @@ class RecorderPage02(Page):
                 'participant': participant_code,
                 'session': session_code,
                 'player_id': player_id,
+                'round': round_num,
                 'role': 'Player 2'
             }}
 
-
 class RecorderPage03(Page):
+    """Aufnahmeseite für Player 3 - in allen 3 Runden"""
     form_model = 'player'
     timeout_seconds = 30
 
@@ -166,18 +178,19 @@ class RecorderPage03(Page):
             session_code = player.session.code
             participant_code = player.participant.code
             player_id = player.id_in_group
+            round_num = player.round_number
 
             recording_dir = os.path.join('recordings', f'session_{session_code}',
                                          f'player_{player_id}_{participant_code}')
 
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"recording_{timestamp}.webm"
+            filename = f"round_{round_num}_recording_{timestamp}.webm"
             filepath = os.path.join(recording_dir, filename)
 
             with open(filepath, 'wb') as f:
                 f.write(audio_data)
 
-            print(f"✓ Audio gespeichert: {filepath}")
+            print(f"✓ Audio gespeichert: {filepath} (Runde {round_num})")
 
             return {player.id_in_group: {
                 'status': 'saved',
@@ -185,16 +198,23 @@ class RecorderPage03(Page):
                 'participant': participant_code,
                 'session': session_code,
                 'player_id': player_id,
+                'round': round_num,
                 'role': 'Player 3'
             }}
 
 
+class BreakPage(Page):
+    @staticmethod
+    def is_displayed(player):
+        return player.round_number < C.NUM_ROUNDS
+
 class WaitAfterRecording(WaitPage):
     pass
 
-
 class EndPage(Page):
-    pass
+    @staticmethod
+    def is_displayed(player):
+        return player.round_number == C.NUM_ROUNDS
 
 
 page_sequence = [
@@ -204,5 +224,6 @@ page_sequence = [
     RecorderPage02,
     RecorderPage03,
     WaitAfterRecording,
+    BreakPage,
     EndPage
 ]
