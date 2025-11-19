@@ -11,7 +11,7 @@ Audio Recording Experiment mit 3 Spielern pro Gruppe und 3 Runden
 class C(BaseConstants):
     NAME_IN_URL = 'App01demo'
     PLAYERS_PER_GROUP = 3
-    NUM_ROUNDS = 3  # ← WICHTIG: 3 Runden!
+    NUM_ROUNDS = 3
 
     PLAYER1_ROLE = 'Player1'
     PLAYER2_ROLE = 'Player2'
@@ -64,6 +64,50 @@ class Player(BasePlayer):
     pass
 
 
+def save_audio_recording(player, data):
+    """
+    Zentrale Funktion zum Speichern von Audio-Aufnahmen.
+    Wird von allen RecorderPage live_methods verwendet.
+    """
+    if 'audio' not in data:
+        return None
+
+    audio_base64 = data['audio']
+    audio_data = base64.b64decode(audio_base64.split(',')[1])
+
+    # Pfad-Informationen sammeln
+    session_code = player.session.code
+    participant_code = player.participant.code
+    player_id = player.id_in_group
+    round_num = player.round_number
+
+    # Ordner und Dateiname
+    recording_dir = os.path.join('recordings', f'session_{session_code}',
+                                 f'player_{player_id}_{participant_code}')
+
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"round_{round_num}_recording_{timestamp}.webm"
+    filepath = os.path.join(recording_dir, filename)
+
+    # Datei speichern
+    with open(filepath, 'wb') as f:
+        f.write(audio_data)
+
+    print(f"✓ Audio gespeichert: {filepath} (Runde {round_num})")
+
+    # Antwort zurückgeben
+    return {
+        player.id_in_group: {
+            'status': 'saved',
+            'filename': filename,
+            'participant': participant_code,
+            'session': session_code,
+            'player_id': player_id,
+            'round': round_num,
+            'role': f'Player {player_id}'
+        }
+    }
+
 # PAGES
 class StartPage(Page):
     @staticmethod
@@ -86,36 +130,7 @@ class RecorderPage01(Page):
 
     @staticmethod
     def live_method(player, data):
-        if 'audio' in data:
-            audio_base64 = data['audio']
-            audio_data = base64.b64decode(audio_base64.split(',')[1])
-
-            session_code = player.session.code
-            participant_code = player.participant.code
-            player_id = player.id_in_group
-            round_num = player.round_number  # ← WICHTIG: Runden-Nummer!
-
-            recording_dir = os.path.join('recordings', f'session_{session_code}',
-                                         f'player_{player_id}_{participant_code}')
-
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"round_{round_num}_recording_{timestamp}.webm"  # ← Mit Runden-Nummer!
-            filepath = os.path.join(recording_dir, filename)
-
-            with open(filepath, 'wb') as f:
-                f.write(audio_data)
-
-            print(f"✓ Audio gespeichert: {filepath} (Runde {round_num})")
-
-            return {player.id_in_group: {
-                'status': 'saved',
-                'filename': filename,
-                'participant': participant_code,
-                'session': session_code,
-                'player_id': player_id,
-                'round': round_num,
-                'role': 'Player 1'
-            }}
+        return save_audio_recording(player, data)
 
 
 class RecorderPage02(Page):
@@ -129,36 +144,8 @@ class RecorderPage02(Page):
 
     @staticmethod
     def live_method(player, data):
-        if 'audio' in data:
-            audio_base64 = data['audio']
-            audio_data = base64.b64decode(audio_base64.split(',')[1])
+        return save_audio_recording(player, data)
 
-            session_code = player.session.code
-            participant_code = player.participant.code
-            player_id = player.id_in_group
-            round_num = player.round_number
-
-            recording_dir = os.path.join('recordings', f'session_{session_code}',
-                                         f'player_{player_id}_{participant_code}')
-
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"round_{round_num}_recording_{timestamp}.webm"
-            filepath = os.path.join(recording_dir, filename)
-
-            with open(filepath, 'wb') as f:
-                f.write(audio_data)
-
-            print(f"✓ Audio gespeichert: {filepath} (Runde {round_num})")
-
-            return {player.id_in_group: {
-                'status': 'saved',
-                'filename': filename,
-                'participant': participant_code,
-                'session': session_code,
-                'player_id': player_id,
-                'round': round_num,
-                'role': 'Player 2'
-            }}
 
 class RecorderPage03(Page):
     """Aufnahmeseite für Player 3 - in allen 3 Runden"""
@@ -171,36 +158,7 @@ class RecorderPage03(Page):
 
     @staticmethod
     def live_method(player, data):
-        if 'audio' in data:
-            audio_base64 = data['audio']
-            audio_data = base64.b64decode(audio_base64.split(',')[1])
-
-            session_code = player.session.code
-            participant_code = player.participant.code
-            player_id = player.id_in_group
-            round_num = player.round_number
-
-            recording_dir = os.path.join('recordings', f'session_{session_code}',
-                                         f'player_{player_id}_{participant_code}')
-
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"round_{round_num}_recording_{timestamp}.webm"
-            filepath = os.path.join(recording_dir, filename)
-
-            with open(filepath, 'wb') as f:
-                f.write(audio_data)
-
-            print(f"✓ Audio gespeichert: {filepath} (Runde {round_num})")
-
-            return {player.id_in_group: {
-                'status': 'saved',
-                'filename': filename,
-                'participant': participant_code,
-                'session': session_code,
-                'player_id': player_id,
-                'round': round_num,
-                'role': 'Player 3'
-            }}
+        return save_audio_recording(player, data)
 
 
 class BreakPage(Page):
@@ -208,8 +166,10 @@ class BreakPage(Page):
     def is_displayed(player):
         return player.round_number < C.NUM_ROUNDS
 
+
 class WaitAfterRecording(WaitPage):
     pass
+
 
 class EndPage(Page):
     @staticmethod
