@@ -1,9 +1,88 @@
-{{ block title }}
-Testseite
-{{ endblock }}
+{{ block title }}Audio Recorder{{ endblock }}
 
 {{ block content }}
-Bitte beantworte die folgende Frage.
-{{ formfields }}
+
+<p id="status">Aufnahme wird vorbereitet...</p>
+
+<script>
+    const status = document.getElementById('status');
+    let mediaRecorder = null;
+    let chunks = [];
+    let recordedBlob = null;
+
+    // Automatisch beim Laden der Seite starten
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then((stream) => {
+                mediaRecorder = new MediaRecorder(stream);
+
+                // Automatisch Aufnahme starten
+                mediaRecorder.start();
+                status.textContent = '🔴 Aufnahme läuft...';
+                console.log('Aufnahme automatisch gestartet');
+
+                mediaRecorder.ondataavailable = (e) => {
+                    chunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = (e) => {
+                    recordedBlob = new Blob(chunks, { type: 'audio/webm' });
+                    console.log('Blob erstellt, Größe:', recordedBlob.size, 'bytes');
+
+                    // Automatisch hochladen
+                    uploadRecording();
+                };
+            })
+            .catch((err) => {
+                console.error(`getUserMedia error: ${err}`);
+                status.textContent = 'Fehler: Mikrofon-Zugriff verweigert';
+            });
+    } else {
+        status.textContent = 'Fehler: getUserMedia wird nicht unterstützt';
+    }
+
+    // Funktion zum Hochladen
+    function uploadRecording() {
+        if (!recordedBlob) {
+            console.error('Kein Blob vorhanden');
+            return;
+        }
+
+        status.textContent = 'Speichere Aufnahme...';
+
+        const reader = new FileReader();
+        reader.onloadend = function() {
+            liveSend({'audio': reader.result});
+        };
+        reader.readAsDataURL(recordedBlob);
+    }
+
+    // Empfange Bestätigung vom Server
+    function liveRecv(data) {
+        if (data.status === 'saved') {
+            status.textContent = '✓ Erfolgreich gespeichert: ' + data.filename;
+            console.log('Upload erfolgreich');
+        }
+    }
+    window.liveRecv = liveRecv;
+
+    // Beim Verlassen der Seite: Aufnahme stoppen und speichern
+    window.addEventListener('beforeunload', function(e) {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            console.log('Aufnahme beim Verlassen gestoppt');
+        }
+    });
+
+    // Alternative für oTree page navigation (falls beforeunload nicht greift)
+    window.addEventListener('pagehide', function(e) {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            console.log('Aufnahme beim Seitenwechsel gestoppt');
+        }
+    });
+</script>
+
 {{ next_button }}
+
 {{ endblock }}
