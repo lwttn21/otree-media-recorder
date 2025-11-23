@@ -1,13 +1,36 @@
-venv
-staticfiles
-./db.sqlite3
-.idea
-*~
+# Virtuelle Umgebung
+venv/
+
+# oTree / Projekt-spezifisch
+staticfiles/
+_static_root/
+_bots*/
+__temp*/
+recordings/
+
+# Datenbanken
+db.sqlite3
 *.sqlite3
-_static_root
-_bots*s
-__temp*
+
+# Python Bytecode
 __pycache__/
 *.py[cod]
+
+# Editor / OS Dateien
+.idea/
+*~
 .DS_Store
+
+# oTree / Export
 *.otreezip
+
+# Logs
+*.log
+
+# Sensible Umgebungsvariablen
+.env
+
+# Docker / Compose
+pgdata/
+*.pid
+*.sock

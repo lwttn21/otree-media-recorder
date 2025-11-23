@@ -1,4 +1,11 @@
 from os import environ
+import dj_database_url
+
+
+DATABASES = {
+    'default': dj_database_url.config(default=environ.get('DATABASE_URL'))
+}
+
 
 SESSION_CONFIGS = [
     dict(
@@ -35,3 +42,6 @@ ADMIN_PASSWORD = environ.get('OTREE_ADMIN_PASSWORD')
 DEMO_PAGE_INTRO_HTML = """ """
 
 SECRET_KEY = '3501709237054'
+
+OTREE_PRODUCTION = True
+DEBUG = False

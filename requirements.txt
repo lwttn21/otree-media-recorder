@@ -25,3 +25,4 @@ WTForms==2.3.3
 WTForms-SQLAlchemy==0.2
 Django>=4.1,<5
 pandas==2.3.1
+dj-database-url
