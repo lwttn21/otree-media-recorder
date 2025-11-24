@@ -4,14 +4,13 @@
 
 <div style="text-align: center; padding: 20px;">
     <h2>🎤 Player 3 - Aufnahme läuft</h2>
-    <p style="color: #666;">Dies ist die spezifische Seite für Player 3</p>
     <p id="status">🔴 Aufnahme wird vorbereitet...</p>
     <p id="timer" style="font-size: 24px; font-weight: bold;"></p>
 </div>
 
-<script src="{{ static 'recorder01.js' }}"></script>
+<script src="{{ static 'recorder02.js' }}"></script>
 <script>
-    const roundNumber = {{ player.round_number }};
-    initializeRecorder('Player 3', roundNumber);
+    startChunkRecorder({{ player.round_number }}, 10, 30, 10);
 </script>
+
 {{ endblock }}

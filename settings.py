@@ -13,6 +13,11 @@ SESSION_CONFIGS = [
         app_sequence=['App01demo'],
         num_demo_participants=3,
     ),
+    dict(
+        name='App02demo',
+        app_sequence=['App02demo'],
+        num_demo_participants=3,
+    ),
 ]
 
 # if you set a property in SESSION_CONFIG_DEFAULTS, it will be inherited by all configs

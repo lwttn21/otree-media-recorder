@@ -1,4 +1,4 @@
-// _static/recorder.js
+// _static/recorder01.js
 function initializeRecorder(playerName, roundNumber) {
     const status = document.getElementById('status');
     const timerDisplay = document.getElementById('timer');
