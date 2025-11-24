@@ -11,6 +11,8 @@ class C(BaseConstants):
     PLAYERS_PER_GROUP = 3
     NUM_ROUNDS = 3
 
+    TIMEOUT_SECONDS = 30
+
 class Subsession(BaseSubsession):
     pass
 
@@ -98,7 +100,7 @@ class WaitForGroup(WaitPage):
 
 class RecorderPage01(Page):
     form_model = 'player'
-    timeout_seconds = 600
+    timeout_seconds = C.TIMEOUT_SECONDS
 
     @staticmethod
     def is_displayed(player):
@@ -111,7 +113,7 @@ class RecorderPage01(Page):
 
 class RecorderPage02(Page):
     form_model = 'player'
-    timeout_seconds = 600
+    timeout_seconds = C.TIMEOUT_SECONDS
 
     @staticmethod
     def is_displayed(player):
@@ -124,7 +126,7 @@ class RecorderPage02(Page):
 
 class RecorderPage03(Page):
     form_model = 'player'
-    timeout_seconds = 600
+    timeout_seconds = C.TIMEOUT_SECONDS
 
     @staticmethod
     def is_displayed(player):

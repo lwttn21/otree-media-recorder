@@ -1,4 +1,4 @@
-function startChunkRecorder(roundNumber, chunkDurationSec = 10, pageDurationSec = 600, stopEarlySec = 30) {
+function startChunkRecorder(roundNumber, chunkDurationSec = 10, pageDurationSec = 30, stopEarlySec = 10) {
     let mediaRecorder = null;
     let chunkIndex = 1;
     let totalRecordingSec = pageDurationSec - stopEarlySec; // z.B. 600 - 30 = 570
@@ -11,10 +11,6 @@ function startChunkRecorder(roundNumber, chunkDurationSec = 10, pageDurationSec 
                 if (e.data.size > 0) {
                     const reader = new FileReader();
                     reader.onloadend = function() {
-                        // Info zu jedem Chunk im Browser (nicht im Server-Terminal!)
-                        //console.log(
-                        //    `[recorder02] Runde ${roundNumber}, Chunk ${chunkIndex} gesendet (${(chunkDurationSec)}s)`
-                        //);
                         liveSend({
                             'audio': reader.result,
                             'round': roundNumber,
@@ -26,16 +22,16 @@ function startChunkRecorder(roundNumber, chunkDurationSec = 10, pageDurationSec 
                 }
             };
 
-            // Nimmt alle chunkDurationSec Sekunden einen Chunk auf
+            // Start Chunk-Recording
             mediaRecorder.start(chunkDurationSec * 1000);
 
             // Stoppe die Aufnahme frühzeitig (vor Pagewechsel)
             setTimeout(() => {
                 if (mediaRecorder && mediaRecorder.state === "recording") {
                     mediaRecorder.stop();
-                    console.log(
-                        `[recorder02] Aufnahme nach ${totalRecordingSec} Sekunden gestoppt (${stopEarlySec}s vor Seitenwechsel)`
-                    );
+                    //console.log(
+                    //    `[recorder02] Aufnahme nach ${totalRecordingSec} Sekunden gestoppt (${stopEarlySec}s vor Seitenwechsel)`
+                    //);
                 }
             }, totalRecordingSec * 1000);
         })
