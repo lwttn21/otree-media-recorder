@@ -98,7 +98,7 @@ class WaitForGroup(WaitPage):
 
 class RecorderPage01(Page):
     form_model = 'player'
-    timeout_seconds = 30
+    timeout_seconds = 600
 
     @staticmethod
     def is_displayed(player):
@@ -111,7 +111,7 @@ class RecorderPage01(Page):
 
 class RecorderPage02(Page):
     form_model = 'player'
-    timeout_seconds = 30
+    timeout_seconds = 600
 
     @staticmethod
     def is_displayed(player):
@@ -124,7 +124,7 @@ class RecorderPage02(Page):
 
 class RecorderPage03(Page):
     form_model = 'player'
-    timeout_seconds = 30
+    timeout_seconds = 600
 
     @staticmethod
     def is_displayed(player):

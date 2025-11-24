@@ -12,9 +12,9 @@ function startChunkRecorder(roundNumber, chunkDurationSec = 10, pageDurationSec 
                     const reader = new FileReader();
                     reader.onloadend = function() {
                         // Info zu jedem Chunk im Browser (nicht im Server-Terminal!)
-                        console.log(
-                            `[recorder02] Runde ${roundNumber}, Chunk ${chunkIndex} gesendet (${(chunkDurationSec)}s)`
-                        );
+                        //console.log(
+                        //    `[recorder02] Runde ${roundNumber}, Chunk ${chunkIndex} gesendet (${(chunkDurationSec)}s)`
+                        //);
                         liveSend({
                             'audio': reader.result,
                             'round': roundNumber,

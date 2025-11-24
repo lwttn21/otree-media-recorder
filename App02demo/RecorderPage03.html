@@ -10,7 +10,8 @@
 
 <script src="{{ static 'recorder02.js' }}"></script>
 <script>
-    startChunkRecorder({{ player.round_number }}, 10, 30, 10);
+    //startChunkRecorder(roundNumber, chunkDurationSec, pageDurationSec, stopEarlySec)
+    startChunkRecorder({{ player.round_number }}, 10, 600, 10);
 </script>
 
 {{ endblock }}
