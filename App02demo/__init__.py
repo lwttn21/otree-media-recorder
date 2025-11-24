@@ -11,7 +11,7 @@ class C(BaseConstants):
     PLAYERS_PER_GROUP = 3
     NUM_ROUNDS = 3
 
-    TIMEOUT_SECONDS = 30
+    TIMEOUT_SECONDS = 120
 
 class Subsession(BaseSubsession):
     pass
